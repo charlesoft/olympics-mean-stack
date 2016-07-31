@@ -14,8 +14,16 @@ angular.module('olympics',["ui.router"])
         return $http.get('/sports');
       }
     },
-    controller: function(sportsService){
+    controller: function(sportsService,$location){
       this.sports = sportsService.data;
+
+      this.isActive = function(sport){
+        let pathRegex = /sports\/(\w+)/;
+        let match = pathRegex.exec($location.path());
+        if (match === null || match.length === 0) return false;
+        let selectedSportName = match[1];
+        return sport === selectedSportName;
+      }
     },
     controllerAs: 'sportsCtrl'
   })
@@ -35,12 +43,12 @@ angular.module('olympics',["ui.router"])
   .state('sports.new', {
     url: '/:sportsName/medal/new',
     templateUrl: 'sports/new-medal.html',
-    controller: function($stateParams, $state){
+    controller: function($stateParams, $state, $http){
       this.sportsName = $stateParams.sportsName;
       this.saveMedal = function(medal){
-        console.log("medal", medal);
-
-      $state.go('sports.medals',{sportsName: $stateParams.sportsName});
+        $http({method: 'POST', url: 'sports/'+this.sportsName+'/medals', data: {medal}}).then(function(){
+          $state.go('sports.medals',{sportsName: $stateParams.sportsName});
+        })
       };
     },
     controllerAs: 'newMedalCtrl'
